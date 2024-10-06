@@ -1,0 +1,159 @@
+# Function to simulate typing (you can add a delay if needed)
+function Type-InField {
+    param (
+        [string]$text
+    )
+    foreach ($char in $text.ToCharArray()) {
+        Add-Type -AssemblyName System.Windows.Forms
+        [System.Windows.Forms.SendKeys]::SendWait($char)
+        Start-Sleep -Milliseconds 100  # Small delay between each character to mimic typing
+    }
+}
+
+
+# Open the Excel file
+$ExcelFilePath = "C:\Users\jayant\Desktop\new_joblist.xlsx"
+$Excel = New-Object -ComObject Excel.Application
+$Excel.Visible = $false
+$Workbook = $Excel.Workbooks.Open($ExcelFilePath)
+$Sheet = $Workbook.Sheets.Item(1)  # Assuming data is in the first sheet
+# Get the last used row to determine how many records to process
+$LastRow = $Sheet.UsedRange.Rows.Count
+for ($row = 2; $row -le $LastRow; $row++) {
+    $ShortDescription = $Sheet.Cells.Item($row, 1).Text  # Column 1 is Short Description
+    $Description = $Sheet.Cells.Item($row, 2).Text       # Column 2 is Description
+
+# Open Chrome to the ServiceNow new incident URL
+$ServiceNowURL = "https://dev265212.service-now.com/incident.do?sys_id=-1&sysparm_query=active=true&sysparm_stack=incident_list.do?sysparm_query=active=true"
+Start-Process "chrome.exe" $ServiceNowURL
+
+# Wait for the page to load (adjust the sleep duration if necessary)
+Start-Sleep -Seconds 10
+
+# Bring the browser to the foreground
+Add-Type @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class User32 {
+        [DllImport("user32.dll", SetLastError=true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+    }
+"@
+
+$hwnd = [User32]::FindWindow("Chrome_WidgetWin_1", "ServiceNow")
+[User32]::SetForegroundWindow($hwnd)
+
+# Simulate typing for each field and navigate through form fields using TAB
+
+Start-Sleep -Seconds 5 # Adjust based on the page load time
+
+#skip 1st INC column
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+Start-Sleep -Milliseconds 1000
+# 1. Simulate typing in the "Caller" field
+Type-InField "Vyankatesh Gujjar"                  # Replace with the actual caller
+Start-Sleep -Milliseconds 1000
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+Start-Sleep -Milliseconds 1000
+
+Type-InField "Virtual-Offshore"
+Start-Sleep -Milliseconds 1000
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+
+
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+# Simulate a mouse left click
+
+
+# Wait for a moment
+Start-Sleep -Milliseconds 500
+
+# Simulate pressing the down arrow key
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+
+# Wait for a moment
+Start-Sleep -Milliseconds 500
+
+# Simulate pressing the down arrow key
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+# 4. Simulate typing in the "Configuration Item" field
+Type-InField "DIS/Process Control"               # Replace with the actual configuration item
+Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+# 5. Simulate typing in the "Impact" field
+Type-InField "2"                # Replace with the actual impact level
+Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+# 6. Simulate typing in the "Urgency" field
+Type-InField "3"                   # Replace with the actual urgency level
+Start-Sleep -Milliseconds 500
+
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+[System.Windows.Forms.SendKeys]::SendWait("{DOWN}")
+
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+
+# 8. Simulate typing in the "Assignment Group" field
+Type-InField "CG_T2_Batch_Operations"                # Replace with the actual assignment group
+#Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+
+# 10. Simulate typing in the "Short Description" field
+Type-InField $ShortDescription  # Replace with actual short description
+#Start-Sleep -Milliseconds 500
+[System.Windows.Forms.SendKeys]::SendWait("{TAB}")
+
+# 11. Simulate typing in the "Description" field
+Type-InField $Description  # Replace with actual description
+#Start-Sleep -Milliseconds 500
+
+
+
+# After filling out all the fields, simulate pressing the ENTER key to submit the form
+# (Optional, assuming the submit button is in focus)
+[System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
+
+# Script ends here. You might need to adjust the wait times to match the actual form response time.
+}
+$Workbook.Close()
+$Excel.Quit()
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Excel)
+Remove-Variable Excel
